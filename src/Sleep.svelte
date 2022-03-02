@@ -1,7 +1,9 @@
 <script>
-  import { onDestroy } from "svelte";
+  import { onDestroy, getContext } from "svelte";
 
-  import { sleepSummary, sleepTracker, STATES } from "./stores/sleeps";
+  import { timerContextKey, timerSumContextKey, STATES } from "./stores/timers";
+  const sleepTracker = getContext(timerContextKey);
+  const sleepSummary = getContext(timerSumContextKey);
 
   function formatTimer(duration) {
     let hours = Math.floor(duration / 3600000);
