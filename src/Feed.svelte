@@ -1,9 +1,9 @@
 <script>
   import { onDestroy, getContext } from "svelte";
-  import { timerContextKey } from "./contexts";
-  import { STATES, formatTimerString } from "./stores/timers";
+  import { feedContextKey } from "./contexts";
+  import { STATES, SOURCES, formatTimerString } from "./stores/feeds";
 
-  const sleepTracker = getContext(timerContextKey);
+  const feedTracker = getContext(feedContextKey);
 
   // Reactive variables
   let activeKey;
@@ -11,18 +11,20 @@
   let history = [];
   let current;
 
+  let source = SOURCES.LEFT;
+
   // The id of the active setInterval, for clearing
   let interval;
 
-  // Subscribe to the sleepSummary
-  const unsubSum = sleepTracker.subscribe((summary) => {
+  // Subscribe to the feedTracker
+  const unsubSum = feedTracker.subscribe((summary) => {
+    console.log("Feed state:", summary);
     // Extract the values of the summary Map
     const sumArray = [...summary].map(([, val]) => val);
     // If the state is STOP, that is a completed timer
     history = sumArray.filter((entry) => entry.data.state === STATES.STOP);
     // If state is START, the timer is still running
     current = sumArray.find((entry) => entry.data.state === STATES.START);
-
     //If we have a currently running timer, set up an interval to update the UI
     if (current) {
       activeKey = current.key;
@@ -46,13 +48,16 @@
   onDestroy(() => clearInterval(interval));
 </script>
 
-<h2>Sleeps</h2>
+<h2>Feeds</h2>
+<input type="radio" bind:group={source} name="Left" value={SOURCES.LEFT} />
+<input type="radio" bind:group={source} name="Right" value={SOURCES.RIGHT} />
+<input type="radio" bind:group={source} name="Bottle" value={SOURCES.BOTTLE} />
 {#if current}
-  <button on:click={() => sleepTracker.stop(activeKey)}>Stop</button>
+  <button on:click={() => feedTracker.stop(activeKey)}>Stop</button>
 {:else}
   <button
     on:click={() => {
-      activeKey = sleepTracker.start();
+      activeKey = feedTracker.start(source);
     }}>Start</button
   >
 {/if}
@@ -64,5 +69,6 @@
 {#each history.reverse() as entry (entry.key)}
   <div>
     {formatTimerString(entry.duration)}
+    {entry.data.source}
   </div>
 {/each}
